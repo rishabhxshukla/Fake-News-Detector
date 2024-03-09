@@ -1,10 +1,27 @@
+import { useState } from "react";
+
 function Home() {
+  const [news, setNews] = useState();
+
+  async function handleForm(e) {
+    e.preventDefault();
+
+    await fetch("http://localhost:8080/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ news }),
+    })
+      .then((res) => console.log("Data sent!"))
+      .catch((err) => console.log(err));
+  }
+
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-20 bg-[#00246B]">
       {/* CONTAINER */}
       <form
         action="/"
         method="POST"
+        onSubmit={handleForm}
         className="flex flex-col items-center rounded-xl border-2 border-gray-300 bg-[#fff8e4] p-10 shadow-xl shadow-black"
       >
         {/* HEADING */}
@@ -15,9 +32,11 @@ function Home() {
         {/* USER INPUT */}
         <textarea
           name="userInput"
+          placeholder="Enter your news article"
           cols="80"
           rows="6"
           autoFocus
+          onChange={(e) => setNews(e.target.value)}
           className="mt-10 resize-none rounded-xl px-5 py-3 text-xl shadow-md"
         />
 
