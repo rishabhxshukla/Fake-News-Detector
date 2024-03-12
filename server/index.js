@@ -1,7 +1,8 @@
 const express = require("express");
 const app = express();
-const dotenv = require("dotenv").config();
 const cors = require("cors");
+const dotenv = require("dotenv").config();
+const { spawn } = require("child_process");
 
 
 const port = process.env.PORT || 4000;
@@ -12,15 +13,24 @@ app.use(cors({ origin: true }));
 app.use(express.urlencoded({ extended: false }));
 
 
-let news = "";
 app.post("/", (req, res) => {
-    news = req.body.news;
-    res.send("News received!");
-});
 
+    const news = req.body.news;
 
-app.get("/getnews", (req, res) => {
-    res.send({ news });
+    //Executing python script with the received news
+    const pythonProcess = spawn("python", ["backend.py", news]);
+
+    //Successful :
+    pythonProcess.stdout.on("data", (data) => {
+        console.log(`Output : ${data}`);
+    });
+
+    //Error :
+    pythonProcess.stderr.on("data", (data) => {
+        console.error(`Error : ${data}`);
+    });
+
+    res.send("News received and detection started!");
 });
 
 
