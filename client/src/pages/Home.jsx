@@ -1,18 +1,45 @@
+import "@babel/polyfill";
 import { useState } from "react";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 
 function Home() {
-  const [news, setNews] = useState();
+  const [news, setNews] = useState("");
+  const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
+    useSpeechRecognition();
 
   async function handleForm(e) {
     e.preventDefault();
 
+    const combinedText = (news + transcript).trim(); // Combine typed text with speech recognition text
+
     await fetch("http://localhost:8080/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ news }),
+      body: JSON.stringify({ news: combinedText }),
     })
       .then((res) => console.log("Data sent!"))
       .catch((err) => console.log(err));
+
+    // Reset transcript after form submission
+    resetTranscript();
+    setNews(""); // Clear the typed text input
+  }
+
+  if (!browserSupportsSpeechRecognition) {
+    return null;
+  }
+
+  function startListening() {
+    SpeechRecognition.startListening({
+      continuous: true,
+      language: "en-IN",
+    });
+  }
+
+  function stopListening() {
+    SpeechRecognition.stopListening();
   }
 
   return (
@@ -36,17 +63,36 @@ function Home() {
           cols="80"
           rows="6"
           autoFocus
+          value={news + transcript}
           onChange={(e) => setNews(e.target.value)}
           className="mt-10 resize-none rounded-xl px-5 py-3 text-xl shadow-md"
         />
 
-        {/* BUTTON */}
-        <button
-          type="submit"
-          className="mt-7 select-none rounded-2xl bg-gray-900 px-14 py-3 text-lg font-semibold uppercase text-white shadow-md shadow-gray-900/10 transition-all hover:shadow-lg hover:shadow-gray-900/30"
-        >
-          Check
-        </button>
+        <div className="mt-10 flex w-[50%] items-center justify-between">
+          {/* START BUTTON */}
+          <button
+            onClick={startListening}
+            className="rounded-xl bg-green-500 px-8 py-2"
+          >
+            Start
+          </button>
+
+          {/* STOP BUTTON */}
+          <button
+            onClick={stopListening}
+            className="rounded-xl bg-red-500 px-8 py-2"
+          >
+            Stop
+          </button>
+
+          {/* SUBMIT BUTTON */}
+          <button
+            type="submit"
+            className="rounded-xl bg-gray-900 px-8 py-2 text-white"
+          >
+            Submit
+          </button>
+        </div>
       </form>
 
       <div className="text-xl text-white">Result</div>
